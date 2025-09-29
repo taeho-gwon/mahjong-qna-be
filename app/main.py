@@ -59,8 +59,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 라우터 등록
-app.include_router(question_router)  # 추가
+app.include_router(question_router)
 
 
 @app.get("/")
