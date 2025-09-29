@@ -1,9 +1,12 @@
 import asyncio
 from logging.config import fileConfig
+
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
 from alembic import context
+
 
 # Alembic Config object
 config = context.config
@@ -13,9 +16,10 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # 프로젝트의 모델들 import
+from app.core.config import get_settings
 from app.models.base import Base
 from app.models.user import User  # noqa: F401
-from app.core.config import get_settings
+
 
 # target_metadata는 'autogenerate' 지원을 위해 설정
 target_metadata = Base.metadata
@@ -53,7 +57,7 @@ def run_migrations_offline() -> None:
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations with provided connection."""
     context.configure(
-        connection=connection, 
+        connection=connection,
         target_metadata=target_metadata,
         compare_type=True,
         compare_server_default=True,

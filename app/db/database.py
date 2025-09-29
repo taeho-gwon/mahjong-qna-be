@@ -1,10 +1,12 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import NullPool
-from sqlalchemy import text
-from typing import AsyncGenerator
 import logging
+from collections.abc import AsyncGenerator
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
+
 
 settings = get_settings()
 
@@ -18,14 +20,10 @@ engine = create_async_engine(
     poolclass=NullPool,
 )
 
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
+AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession]:
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -51,9 +49,7 @@ async def test_connection() -> bool:
 
 def get_db_info() -> dict:
     return {
-        "database_url": settings.database_url.replace(
-            settings.postgres_password, "***"
-        ),
+        "database_url": settings.database_url.replace(settings.postgres_password, "***"),
         "pool_class": "NullPool",
         "echo": engine.echo,
     }
