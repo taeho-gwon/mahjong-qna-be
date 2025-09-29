@@ -4,8 +4,6 @@ from pydantic import Field
 
 
 class Settings(BaseSettings):
-    """애플리케이션 설정 클래스"""
-
     # Database Settings
     database_url: str = Field(..., alias="DATABASE_URL")
     postgres_user: str = Field(..., alias="POSTGRES_USER")

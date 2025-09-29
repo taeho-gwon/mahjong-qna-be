@@ -7,7 +7,6 @@
 from .database import (
     engine,
     get_session,
-    get_async_session,
     test_connection,
     get_db_info,
 )
@@ -15,7 +14,6 @@ from .database import (
 __all__ = [
     "engine",
     "get_session",
-    "get_async_session",
     "test_connection",
     "get_db_info",
 ]
