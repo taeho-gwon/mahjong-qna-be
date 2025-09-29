@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class QuestionCreate(BaseModel):
@@ -22,6 +22,7 @@ class QuestionCreate(BaseModel):
         description="작성자 닉네임",
         examples=["햄버거"],
     )
+
 
 class QuestionResponse(BaseModel):
     id: int = Field(..., description="질문 ID")

@@ -20,5 +20,4 @@ async def create_question_api(
     question_in: QuestionCreate,
     db: AsyncSession = Depends(get_session),
 ) -> QuestionResponse:
-    question = await create_question(db, question_in)
-    return question
+    return await create_question(db, question_in)
