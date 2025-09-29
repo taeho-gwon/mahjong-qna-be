@@ -1,4 +1,3 @@
-# app/main.py (업데이트)
 import logging
 from contextlib import asynccontextmanager
 
@@ -29,7 +28,6 @@ async def lifespan(app: FastAPI):
     )
 
     # 모든 모델을 import해서 메타데이터에 등록되도록 함
-    import app.models.user  # noqa: F401
 
     # 데이터베이스 연결 테스트
     if await test_connection():
