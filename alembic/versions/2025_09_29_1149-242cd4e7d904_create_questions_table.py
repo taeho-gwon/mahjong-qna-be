@@ -1,7 +1,7 @@
 """create questions table
 
 Revision ID: 242cd4e7d904
-Revises: 
+Revises:
 Create Date: 2025-09-29 11:49:15.774754
 
 """
