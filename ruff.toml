@@ -1,0 +1,77 @@
+# 기본 설정
+line-length = 100
+target-version = "py313"
+fix = true
+output-format = "grouped"
+
+# 포함할 파일 패턴
+include = ["*.py"]
+
+# 제외할 디렉토리/파일
+exclude = [
+    ".venv",                       # 가상환경
+    "__pycache__", ".ruff_cache",  # 캐시 파일들
+    "alembic",
+]
+
+[lint]
+# 활성화할 규칙 세트 (실용적이고 필요한 것만)
+select = [
+    # 기본 필수 규칙
+    "E",    # pycodestyle errors (문법 오류)
+    "W",    # pycodestyle warnings (스타일 경고)
+    "F",    # Pyflakes (미사용 import, 변수 등)
+
+    # 코드 품질 개선
+    "I",    # isort (import 정렬)
+    "B",    # flake8-bugbear (일반적인 버그 패턴)
+    "C4",   # flake8-comprehensions (리스트/딕셔너리 comprehension)
+    "UP",   # pyupgrade (최신 Python 문법 사용)
+    "SIM",  # flake8-simplify (코드 단순화)
+
+    # 함수/변수 관리
+    "ARG",  # flake8-unused-arguments (사용하지 않는 인수)
+    "N",    # pep8-naming (변수명/함수명 규칙)
+
+    # 복잡도 관리
+    "C90",  # mccabe (함수 복잡도)
+
+    # 개발 편의성
+    "T20",  # flake8-print (print 문 검사)
+    "RET",  # flake8-return (return 스타일)
+]
+
+# 무시할 규칙 (꼭 필요한 예외만)
+ignore = [
+    # FastAPI 관련 예외
+    "B008",    # 함수 호출을 기본 인수로 사용 (FastAPI Depends()에서 필요)
+]
+
+# 파일별 무시 규칙 (실용적으로)
+[lint.per-file-ignores]
+# 초기화 파일
+"__init__.py" = [
+    "F401",   # 사용하지 않는 import (re-export용)
+]
+
+# 테스트 파일
+"**/tests/*.py" = [
+    "ARG001",  # 사용하지 않는 인수 (pytest fixture)
+    "T201",    # print 허용 (디버깅용)
+]
+
+[lint.mccabe]
+# 복잡도 임계값 (실용적으로)
+max-complexity = 10  # 기본값으로 복원
+
+[lint.isort]
+# isort 설정 (기본적인 것만)
+known-first-party = ["app"]
+lines-after-imports = 2
+
+[format]
+# 포매팅 설정 (기본적인 것만)
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

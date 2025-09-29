@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, String
-from app.models.base import Base
+from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
+
+from app.models.base import Base
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     username = Column(String(50), unique=True, nullable=False, index=True)
     timezone = Column(String(50), default="Asia/Seoul", nullable=False)  # 시간대

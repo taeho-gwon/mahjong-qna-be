@@ -6,10 +6,11 @@
 
 from .database import (
     engine,
+    get_db_info,
     get_session,
     test_connection,
-    get_db_info,
 )
+
 
 __all__ = [
     "engine",
