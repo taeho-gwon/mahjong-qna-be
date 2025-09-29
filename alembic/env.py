@@ -18,7 +18,6 @@ if config.config_file_name is not None:
 # 프로젝트의 모델들 import
 from app.core.config import get_settings
 from app.models.base import Base
-from app.models.user import User  # noqa: F401
 
 
 # target_metadata는 'autogenerate' 지원을 위해 설정
