@@ -1,7 +1,7 @@
 [project]
-name = "task-manager-api"
+name = "mahjong-qna-be"
 version = "0.1.0"
-description = "Task Manager API with FastAPI and SQLAlchemy (Async)"
+description = "Mahjong Q&A Backend API"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
