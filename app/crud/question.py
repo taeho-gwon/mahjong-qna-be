@@ -7,10 +7,11 @@ from app.schemas.question import QuestionCreate, QuestionUpdate
 
 async def create_question(db: AsyncSession, question_in: QuestionCreate) -> Question:
     question_dict = question_in.model_dump()
-    db_question = Question(**question_dict)
-    db.add(db_question)
+    question = Question(**question_dict)
+    db.add(question)
     await db.commit()
-    return db_question
+    await db.refresh(question)
+    return question
 
 
 async def read_question_by_id(db: AsyncSession, question_id: int) -> Question | None:
