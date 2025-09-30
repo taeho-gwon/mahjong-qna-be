@@ -3,7 +3,7 @@ from math import ceil
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.question import create_question, read_question_by_id, read_questions
+from app.crud.question import create_question, read_question_by_id, read_questions, update_question
 from app.db.database import get_session
 from app.schemas.question import (
     PaginationMeta,
@@ -11,6 +11,7 @@ from app.schemas.question import (
     QuestionListItem,
     QuestionListResponse,
     QuestionResponse,
+    QuestionUpdate,
 )
 
 
@@ -78,3 +79,24 @@ async def list_questions_handler(
             total_pages=total_pages,
         ),
     )
+
+
+@router.patch(
+    "/{question_id}",
+    response_model=QuestionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="질문 수정",
+    description="ID로 특정 질문을 수정합니다. 제공된 필드만 업데이트됩니다.",
+)
+async def update_question_handler(
+    question_id: int,
+    question_in: QuestionUpdate,
+    db: AsyncSession = Depends(get_session),
+) -> QuestionResponse:
+    question = await update_question(db, question_id, question_in)
+    if question is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
+        )
+    return question
