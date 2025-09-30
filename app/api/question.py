@@ -3,7 +3,13 @@ from math import ceil
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.question import create_question, read_question_by_id, read_questions, update_question
+from app.crud.question import (
+    create_question,
+    delete_question,
+    read_question_by_id,
+    read_questions,
+    update_question,
+)
 from app.db.database import get_session
 from app.schemas.question import (
     PaginationMeta,
@@ -100,3 +106,21 @@ async def update_question_handler(
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
     return question
+
+
+@router.delete(
+    "/{question_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="질문 삭제",
+    description="ID로 특정 질문을 삭제합니다. 성공 시 204 No Content를 반환합니다.",
+)
+async def delete_question_handler(
+    question_id: int,
+    db: AsyncSession = Depends(get_session),
+) -> None:
+    deleted = await delete_question(db, question_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
+        )
