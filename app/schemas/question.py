@@ -51,3 +51,19 @@ class PaginationMeta(BaseModel):
 class QuestionListResponse(BaseModel):
     items: list[QuestionListItem] = Field(..., description="질문 목록")
     pagination: PaginationMeta = Field(..., description="페이지네이션 정보")
+
+
+class QuestionUpdate(BaseModel):
+    title: str | None = Field(
+        None,
+        min_length=5,
+        max_length=200,
+        description="질문 제목",
+        examples=["수정된 질문 제목"],
+    )
+    content: str | None = Field(
+        None,
+        min_length=10,
+        description="질문 내용",
+        examples=["수정된 질문 내용입니다."],
+    )
