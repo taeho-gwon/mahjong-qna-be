@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.answer import router as answer_router
 from app.api.question import router as question_router
 from app.db.database import test_connection
 
@@ -16,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """애플리케이션 라이프사이클 관리"""
-    # 시작 시 실행
     logger.info("애플리케이션 시작...")
 
     # 모든 모델을 import해서 메타데이터에 등록되도록 함
+    from app.models.answer import Answer  # noqa: F401
+    from app.models.question import Question  # noqa: F401
 
     if await test_connection():
         logger.info("데이터베이스 연결 성공!")
@@ -50,6 +51,8 @@ app.add_middleware(
 )
 
 app.include_router(question_router)
+
+app.include_router(answer_router)
 
 
 @app.get("/")
