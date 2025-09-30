@@ -31,3 +31,23 @@ class QuestionResponse(BaseModel):
     author_nickname: str = Field(..., description="작성자 닉네임")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class QuestionListItem(BaseModel):
+    id: int = Field(..., description="질문 ID")
+    title: str = Field(..., description="질문 제목")
+    author_nickname: str = Field(..., description="작성자 닉네임")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PaginationMeta(BaseModel):
+    total: int = Field(..., description="전체 항목 수", examples=[100])
+    page: int = Field(..., description="현재 페이지", examples=[1])
+    size: int = Field(..., description="페이지당 항목 수", examples=[10])
+    total_pages: int = Field(..., description="전체 페이지 수", examples=[10])
+
+
+class QuestionListResponse(BaseModel):
+    items: list[QuestionListItem] = Field(..., description="질문 목록")
+    pagination: PaginationMeta = Field(..., description="페이지네이션 정보")
