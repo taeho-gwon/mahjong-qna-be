@@ -16,7 +16,7 @@ router = APIRouter(prefix="/questions", tags=["questions"])
     summary="질문 생성",
     description="새로운 마작 질문을 생성합니다.",
 )
-async def create_question_api(
+async def create_question_handler(
     question_in: QuestionCreate,
     db: AsyncSession = Depends(get_session),
 ) -> QuestionResponse:
@@ -30,7 +30,7 @@ async def create_question_api(
     summary="질문 단일 조회",
     description="ID로 특정 질문을 조회합니다.",
 )
-async def get_question_endpoint(
+async def get_question_handler(
     question_id: int,
     db: AsyncSession = Depends(get_session),
 ) -> QuestionResponse:

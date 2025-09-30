@@ -26,4 +26,8 @@ class QuestionCreate(BaseModel):
 
 class QuestionResponse(BaseModel):
     id: int = Field(..., description="질문 ID")
+    title: str = Field(..., description="질문 제목")
+    content: str = Field(..., description="질문 내용")
+    author_nickname: str = Field(..., description="작성자 닉네임")
+
     model_config = ConfigDict(from_attributes=True)
