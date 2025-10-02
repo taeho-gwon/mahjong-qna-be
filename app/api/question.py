@@ -35,7 +35,9 @@ async def create_question_handler(
     question_in: QuestionCreate,
     db: AsyncSession = Depends(get_session),
 ) -> QuestionResponse:
-    return await create_question(db, question_in)
+    question = await create_question(db, question_in)
+    await db.commit()
+    return question
 
 
 @router.get(
@@ -105,6 +107,7 @@ async def update_question_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
+    await db.commit()
     return question
 
 
@@ -118,9 +121,10 @@ async def delete_question_handler(
     question_id: int,
     db: AsyncSession = Depends(get_session),
 ) -> None:
-    deleted = await delete_question(db, question_id)
-    if not deleted:
+    result = await delete_question(db, question_id)
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
+    await db.commit()

@@ -17,6 +17,7 @@ POSTGRES_URL = settings.database_url.replace(settings.postgres_db, "postgres")
 
 
 async def create_test_database():
+    """테스트 데이터베이스 생성"""
     engine = create_async_engine(
         POSTGRES_URL,
         isolation_level="AUTOCOMMIT",
@@ -42,6 +43,7 @@ async def create_test_database():
 
 
 async def drop_test_database():
+    """테스트 데이터베이스 삭제"""
     engine = create_async_engine(
         POSTGRES_URL,
         isolation_level="AUTOCOMMIT",
@@ -67,6 +69,7 @@ async def drop_test_database():
 
 @pytest.fixture(scope="session")
 def event_loop():
+    """이벤트 루프 fixture"""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -74,6 +77,7 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 async def test_engine(event_loop):
+    """테스트 엔진 fixture"""
     await create_test_database()
 
     engine = create_async_engine(
@@ -93,13 +97,13 @@ async def test_engine(event_loop):
 
     await engine.dispose()
 
-    # 테스트 DB 삭제
-    # 주석 해제하면 매번 DB를 삭제합니다
+    # 테스트 DB 삭제 (필요시 주석 해제)
     # await drop_test_database()
 
 
 @pytest.fixture(scope="session")
 def test_session_maker(test_engine):
+    """세션 메이커 fixture"""
     return async_sessionmaker(
         test_engine,
         class_=AsyncSession,
@@ -109,13 +113,20 @@ def test_session_maker(test_engine):
 
 @pytest.fixture
 async def db_session(test_session_maker) -> AsyncGenerator[AsyncSession]:
+    """
+    데이터베이스 세션 fixture
+
+    CRUD 함수가 commit을 호출하지 않으므로,
+    단순히 rollback만으로 테스트 격리가 보장됩니다.
+    """
     async with test_session_maker() as session:
         yield session
-        await session.rollback()
+        await session.rollback()  # ✅ 단순한 rollback으로 격리!
 
 
 @pytest.fixture
 def sample_question_data():
+    """샘플 질문 데이터 fixture"""
     return {
         "title": "테스트 질문입니다",
         "content": "이것은 테스트용 질문 내용입니다. 최소 10자 이상이어야 합니다.",
@@ -125,6 +136,7 @@ def sample_question_data():
 
 @pytest.fixture
 def sample_answer_data():
+    """샘플 답변 데이터 fixture"""
     return {
         "content": "이것은 테스트용 답변 내용입니다. 최소 10자 이상이어야 합니다.",
         "author_nickname": "답변자",
