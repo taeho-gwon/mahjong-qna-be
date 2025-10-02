@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마작 Q&A 테스트 페이지 🀄️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .api-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .api-links a {
+            background: white;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .api-links a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.delete {
+            background: #ef4444;
+        }
+
+        button.delete:hover {
+            background: #dc2626;
+        }
+
+        button.update {
+            background: #10b981;
+        }
+
+        button.update:hover {
+            background: #059669;
+        }
+
+        .question-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .question-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .question-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .question-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .question-title:hover {
+            color: #667eea;
+        }
+
+        .question-meta {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .question-content {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .question-content.show {
+            display: block;
+        }
+
+        .answer-list {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .answer-list.show {
+            display: block;
+        }
+
+        .answer-item {
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .answer-meta {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .answer-content {
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+        }
+
+        .pagination span {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .response {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .response.show {
+            display: block;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🀄️ 마작 Q&A 테스트 페이지</h1>
+
+        <div class="api-links">
+            <a href="/docs" target="_blank">📖 API 문서 (Swagger)</a>
+            <a href="/redoc" target="_blank">📚 API 문서 (ReDoc)</a>
+            <a href="/api" target="_blank">ℹ️ API 정보</a>
+        </div>
+
+        <!-- 질문 생성 -->
+        <div class="section">
+            <h2>📝 질문 작성</h2>
+            <div class="form-group">
+                <label>제목 (5자 이상)</label>
+                <input type="text" id="questionTitle" placeholder="질문 제목을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label>내용 (10자 이상)</label>
+                <textarea id="questionContent" placeholder="질문 내용을 입력하세요"></textarea>
+            </div>
+            <div class="form-group">
+                <label>작성자 닉네임 (2자 이상)</label>
+                <input type="text" id="questionAuthor" placeholder="닉네임을 입력하세요">
+            </div>
+            <button onclick="createQuestion()">질문 등록</button>
+            <div id="createResponse" class="response"></div>
+        </div>
+
+        <!-- 질문 목록 -->
+        <div class="section">
+            <h2>📋 질문 목록</h2>
+            <div class="pagination">
+                <button onclick="prevPage()">← 이전</button>
+                <span>페이지 <span id="currentPage">1</span></span>
+                <button onclick="nextPage()">다음 →</button>
+            </div>
+            <div id="questionList" class="question-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // 현재 도메인을 API Base URL로 사용
+        const API_BASE_URL = window.location.origin;
+        let currentPage = 1;
+        const pageSize = 5;
+
+        // 질문 생성
+        async function createQuestion() {
+            const title = document.getElementById('questionTitle').value;
+            const content = document.getElementById('questionContent').value;
+            const author = document.getElementById('questionAuthor').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        content: content,
+                        author_nickname: author
+                    })
+                });
+
+                const data = await response.json();
+                const responseDiv = document.getElementById('createResponse');
+
+                if (response.ok) {
+                    responseDiv.className = 'response show';
+                    responseDiv.textContent = `✅ 질문이 등록되었습니다! (ID: ${data.id})`;
+
+                    // 입력 초기화
+                    document.getElementById('questionTitle').value = '';
+                    document.getElementById('questionContent').value = '';
+                    document.getElementById('questionAuthor').value = '';
+
+                    // 목록 새로고침
+                    loadQuestions();
+                } else {
+                    responseDiv.className = 'response error show';
+                    responseDiv.textContent = `❌ 오류: ${JSON.stringify(data.detail)}`;
+                }
+            } catch (error) {
+                document.getElementById('createResponse').className = 'response error show';
+                document.getElementById('createResponse').textContent = `❌ 네트워크 오류: ${error.message}`;
+            }
+        }
+
+        // 질문 목록 조회
+        async function loadQuestions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions?page=${currentPage}&size=${pageSize}`);
+                const data = await response.json();
+
+                const listDiv = document.getElementById('questionList');
+                listDiv.innerHTML = '';
+
+                if (data.items.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align: center; color: #9ca3af;">등록된 질문이 없습니다.</p>';
+                    return;
+                }
+
+                data.items.forEach(question => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question-item';
+                    questionDiv.innerHTML = `
+                        <div class="question-title" onclick="toggleQuestion(${question.id})">
+                            ${question.title}
+                        </div>
+                        <div class="question-meta">
+                            작성자: ${question.author_nickname} | ID: ${question.id}
+                        </div>
+                        <div id="question-content-${question.id}" class="question-content"></div>
+                        <div id="answers-${question.id}" class="answer-list"></div>
+                        <div class="button-group">
+                            <button onclick="loadAnswers(${question.id})">답변 보기</button>
+                            <button class="update" onclick="showUpdateForm(${question.id})">수정</button>
+                            <button class="delete" onclick="deleteQuestion(${question.id})">삭제</button>
+                        </div>
+                    `;
+                    listDiv.appendChild(questionDiv);
+                });
+
+                document.getElementById('currentPage').textContent = currentPage;
+            } catch (error) {
+                console.error('질문 목록 조회 실패:', error);
+            }
+        }
+
+        // 질문 상세 토글
+        async function toggleQuestion(questionId) {
+            const contentDiv = document.getElementById(`question-content-${questionId}`);
+
+            if (contentDiv.classList.contains('show')) {
+                contentDiv.classList.remove('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}`);
+                const data = await response.json();
+
+                contentDiv.innerHTML = `<p><strong>내용:</strong> ${data.content}</p>`;
+                contentDiv.classList.add('show');
+            } catch (error) {
+                console.error('질문 상세 조회 실패:', error);
+            }
+        }
+
+        // 답변 목록 조회
+        async function loadAnswers(questionId) {
+            const answersDiv = document.getElementById(`answers-${questionId}`);
+
+            if (answersDiv.classList.contains('show')) {
+                answersDiv.classList.remove('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}/answers`);
+                const answers = await response.json();
+
+                if (answers.length === 0) {
+                    answersDiv.innerHTML = `
+                        <p style="text-align: center; color: #9ca3af; margin: 10px 0;">
+                            아직 답변이 없습니다.
+                        </p>
+                        <div style="margin-top: 15px;">
+                            <input type="text" id="answer-content-${questionId}"
+                                   placeholder="답변 내용 (10자 이상)"
+                                   style="width: 100%; margin-bottom: 10px;">
+                            <input type="text" id="answer-author-${questionId}"
+                                   placeholder="작성자 닉네임"
+                                   style="width: 100%; margin-bottom: 10px;">
+                            <button onclick="createAnswer(${questionId})">답변 작성</button>
+                        </div>
+                    `;
+                } else {
+                    answersDiv.innerHTML = answers.map(answer => `
+                        <div class="answer-item">
+                            <div class="answer-meta">
+                                ${answer.author_nickname} | ID: ${answer.id}
+                            </div>
+                            <div class="answer-content">${answer.content}</div>
+                            <div class="button-group" style="margin-top: 8px;">
+                                <button class="delete" onclick="deleteAnswer(${questionId}, ${answer.id})">삭제</button>
+                            </div>
+                        </div>
+                    `).join('') + `
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                            <input type="text" id="answer-content-${questionId}"
+                                   placeholder="답변 내용 (10자 이상)"
+                                   style="width: 100%; margin-bottom: 10px;">
+                            <input type="text" id="answer-author-${questionId}"
+                                   placeholder="작성자 닉네임"
+                                   style="width: 100%; margin-bottom: 10px;">
+                            <button onclick="createAnswer(${questionId})">답변 작성</button>
+                        </div>
+                    `;
+                }
+
+                answersDiv.classList.add('show');
+            } catch (error) {
+                console.error('답변 조회 실패:', error);
+            }
+        }
+
+        // 답변 작성
+        async function createAnswer(questionId) {
+            const content = document.getElementById(`answer-content-${questionId}`).value;
+            const author = document.getElementById(`answer-author-${questionId}`).value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}/answers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: content,
+                        author_nickname: author
+                    })
+                });
+
+                if (response.ok) {
+                    alert('✅ 답변이 등록되었습니다!');
+                    document.getElementById(`answers-${questionId}`).classList.remove('show');
+                    loadAnswers(questionId);
+                } else {
+                    const data = await response.json();
+                    alert(`❌ 오류: ${JSON.stringify(data.detail)}`);
+                }
+            } catch (error) {
+                alert(`❌ 네트워크 오류: ${error.message}`);
+            }
+        }
+
+        // 질문 삭제
+        async function deleteQuestion(questionId) {
+            if (!confirm('정말 이 질문을 삭제하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('✅ 질문이 삭제되었습니다!');
+                    loadQuestions();
+                } else {
+                    alert('❌ 삭제 실패');
+                }
+            } catch (error) {
+                alert(`❌ 네트워크 오류: ${error.message}`);
+            }
+        }
+
+        // 답변 삭제
+        async function deleteAnswer(questionId, answerId) {
+            if (!confirm('정말 이 답변을 삭제하시겠습니까?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}/answers/${answerId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('✅ 답변이 삭제되었습니다!');
+                    document.getElementById(`answers-${questionId}`).classList.remove('show');
+                    loadAnswers(questionId);
+                } else {
+                    alert('❌ 삭제 실패');
+                }
+            } catch (error) {
+                alert(`❌ 네트워크 오류: ${error.message}`);
+            }
+        }
+
+        // 페이지네이션
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadQuestions();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadQuestions();
+        }
+
+        // 질문 수정 폼 표시
+        function showUpdateForm(questionId) {
+            const newTitle = prompt('새로운 제목을 입력하세요 (취소하면 제목 유지):');
+            const newContent = prompt('새로운 내용을 입력하세요 (취소하면 내용 유지):');
+
+            const updateData = {};
+            if (newTitle) updateData.title = newTitle;
+            if (newContent) updateData.content = newContent;
+
+            if (Object.keys(updateData).length === 0) {
+                alert('수정할 내용이 없습니다.');
+                return;
+            }
+
+            updateQuestion(questionId, updateData);
+        }
+
+        // 질문 수정
+        async function updateQuestion(questionId, updateData) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions/${questionId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (response.ok) {
+                    alert('✅ 질문이 수정되었습니다!');
+                    loadQuestions();
+                } else {
+                    const data = await response.json();
+                    alert(`❌ 오류: ${JSON.stringify(data.detail)}`);
+                }
+            } catch (error) {
+                alert(`❌ 네트워크 오류: ${error.message}`);
+            }
+        }
+
+        // 페이지 로드 시 질문 목록 조회
+        window.onload = () => {
+            loadQuestions();
+        };
+    </script>
+</body>
+</html>

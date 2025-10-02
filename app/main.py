@@ -1,9 +1,11 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path as PathLib
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.answer import router as answer_router
 from app.api.question import router as question_router
@@ -53,15 +55,12 @@ app.include_router(question_router)
 
 app.include_router(answer_router)
 
+static_dir = PathLib(__file__).parent.parent / "static"
+static_dir.mkdir(exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
 
 @app.get("/")
 async def root():
-    return JSONResponse(
-        content={
-            "message": "Welcome to MahjongQnA API! 🀄️",
-            "description": "Mahjong Questions & Answers Community",
-            "version": "1.0.0",
-            "docs": "/docs",
-            "redoc": "/redoc",
-        }
-    )
+    return FileResponse(static_dir / "index.html")
