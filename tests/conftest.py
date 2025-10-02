@@ -3,7 +3,10 @@ from collections.abc import AsyncGenerator
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
+)
 
 from app.core.config import get_settings
 from app.models.base import Base
@@ -97,31 +100,36 @@ async def test_engine(event_loop):
 
     await engine.dispose()
 
-    # 테스트 DB 삭제 (필요시 주석 해제)
-    # await drop_test_database()
-
-
-@pytest.fixture(scope="session")
-def test_session_maker(test_engine):
-    """세션 메이커 fixture"""
-    return async_sessionmaker(
-        test_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-
 
 @pytest.fixture
-async def db_session(test_session_maker) -> AsyncGenerator[AsyncSession]:
+async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
     """
-    데이터베이스 세션 fixture
+    데이터베이스 세션 fixture (Connection-level Transaction)
 
-    CRUD 함수가 commit을 호출하지 않으므로,
-    단순히 rollback만으로 테스트 격리가 보장됩니다.
+    Connection 레벨에서 트랜잭션을 관리하여 완벽한 격리를 보장합니다.
+    - Connection에서 트랜잭션 시작
+    - Session은 해당 connection을 사용
+    - API의 commit()은 아무 효과 없음 (sync_session_class 설정으로)
+    - 테스트 종료 후 connection의 트랜잭션을 rollback
+
+    이 방식은 FastAPI, SQLAlchemy 테스트에서 권장하는 패턴입니다.
     """
-    async with test_session_maker() as session:
-        yield session
-        await session.rollback()  # ✅ 단순한 rollback으로 격리!
+    # Connection 생성 및 트랜잭션 시작
+    async with test_engine.connect() as connection:
+        # 트랜잭션 시작
+        transaction = await connection.begin()
+
+        # Session을 해당 connection에 바인딩
+        async_session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+        )
+
+        yield async_session
+
+        # 테스트 종료 후 rollback
+        await async_session.close()
+        await transaction.rollback()
 
 
 @pytest.fixture
