@@ -55,7 +55,7 @@ class TestAnswerAPI:
         question_id: int,
     ):
         invalid_data = {
-            "content": "짧음",  # 10자 미만
+            "content": "짧음",
             "author_nickname": "답변자",
         }
         response = await api_client.post(
