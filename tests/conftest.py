@@ -20,7 +20,6 @@ POSTGRES_URL = settings.database_url.replace(settings.postgres_db, "postgres")
 
 
 async def create_test_database():
-    """테스트 데이터베이스 생성"""
     engine = create_async_engine(
         POSTGRES_URL,
         isolation_level="AUTOCOMMIT",
@@ -38,15 +37,11 @@ async def create_test_database():
 
         if not exists:
             await conn.execute(text(f'CREATE DATABASE "{TEST_DB_NAME}"'))
-            print(f"\n✅ 테스트 DB 생성: {TEST_DB_NAME}")
-        else:
-            print(f"\n✅ 테스트 DB 이미 존재: {TEST_DB_NAME}")
 
     await engine.dispose()
 
 
 async def drop_test_database():
-    """테스트 데이터베이스 삭제"""
     engine = create_async_engine(
         POSTGRES_URL,
         isolation_level="AUTOCOMMIT",
@@ -65,14 +60,12 @@ async def drop_test_database():
         )
 
         await conn.execute(text(f'DROP DATABASE IF EXISTS "{TEST_DB_NAME}"'))
-        print(f"\n✅ 테스트 DB 삭제: {TEST_DB_NAME}")
 
     await engine.dispose()
 
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """이벤트 루프 fixture"""
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
@@ -80,7 +73,6 @@ def event_loop():
 
 @pytest.fixture(scope="session")
 async def test_engine(event_loop):
-    """테스트 엔진 fixture"""
     await create_test_database()
 
     engine = create_async_engine(
@@ -103,23 +95,9 @@ async def test_engine(event_loop):
 
 @pytest.fixture
 async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
-    """
-    데이터베이스 세션 fixture (Connection-level Transaction)
-
-    Connection 레벨에서 트랜잭션을 관리하여 완벽한 격리를 보장합니다.
-    - Connection에서 트랜잭션 시작
-    - Session은 해당 connection을 사용
-    - API의 commit()은 아무 효과 없음 (sync_session_class 설정으로)
-    - 테스트 종료 후 connection의 트랜잭션을 rollback
-
-    이 방식은 FastAPI, SQLAlchemy 테스트에서 권장하는 패턴입니다.
-    """
-    # Connection 생성 및 트랜잭션 시작
     async with test_engine.connect() as connection:
-        # 트랜잭션 시작
         transaction = await connection.begin()
 
-        # Session을 해당 connection에 바인딩
         async_session = AsyncSession(
             bind=connection,
             expire_on_commit=False,
@@ -127,14 +105,12 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
 
         yield async_session
 
-        # 테스트 종료 후 rollback
         await async_session.close()
         await transaction.rollback()
 
 
 @pytest.fixture
 def sample_question_data():
-    """샘플 질문 데이터 fixture"""
     return {
         "title": "테스트 질문입니다",
         "content": "이것은 테스트용 질문 내용입니다. 최소 10자 이상이어야 합니다.",
@@ -144,7 +120,6 @@ def sample_question_data():
 
 @pytest.fixture
 def sample_answer_data():
-    """샘플 답변 데이터 fixture"""
     return {
         "content": "이것은 테스트용 답변 내용입니다. 최소 10자 이상이어야 합니다.",
         "author_nickname": "답변자",

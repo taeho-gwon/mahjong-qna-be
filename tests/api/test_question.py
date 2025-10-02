@@ -8,19 +8,11 @@ from app.schemas.question import QuestionCreate
 
 @pytest.mark.asyncio
 class TestQuestionAPI:
-    """
-    질문 API 스모크 테스트
-
-    목적: HTTP 레이어(라우팅, 상태코드, 트랜잭션 커밋) 검증
-    범위: 각 엔드포인트당 성공/실패 케이스만 간단히 확인
-    """
-
     async def test_create_question(
         self,
         api_client: AsyncClient,
         sample_question_data: dict,
     ):
-        """POST /questions - 생성 성공"""
         response = await api_client.post("/questions", json=sample_question_data)
 
         assert response.status_code == 201
@@ -29,9 +21,8 @@ class TestQuestionAPI:
         assert data["title"] == sample_question_data["title"]
 
     async def test_create_question_validation_error(self, api_client: AsyncClient):
-        """POST /questions - 유효성 검증 실패 (422)"""
         invalid_data = {
-            "title": "짧음",  # 5자 미만
+            "title": "짧음",
             "content": "내용입니다. 최소 10자 이상.",
             "author_nickname": "테스터",
         }
@@ -45,7 +36,6 @@ class TestQuestionAPI:
         db_session: AsyncSession,
         sample_question_data: dict,
     ):
-        """GET /questions/{id} - 조회 성공"""
         question_in = QuestionCreate(**sample_question_data)
         question = await create_question(db_session, question_in)
         await db_session.commit()
@@ -56,7 +46,6 @@ class TestQuestionAPI:
         assert response.json()["id"] == question.id
 
     async def test_get_question_not_found(self, api_client: AsyncClient):
-        """GET /questions/{id} - 존재하지 않는 질문 (404)"""
         response = await api_client.get("/questions/999999")
 
         assert response.status_code == 404
@@ -67,8 +56,6 @@ class TestQuestionAPI:
         db_session: AsyncSession,
         sample_question_data: dict,
     ):
-        """GET /questions - 목록 조회 및 페이지네이션"""
-        # 15개 생성
         for i in range(15):
             data = sample_question_data.copy()
             data["title"] = f"테스트 질문 {i + 1}번"
@@ -76,7 +63,6 @@ class TestQuestionAPI:
             await create_question(db_session, question_in)
         await db_session.commit()
 
-        # 페이지네이션 확인
         response = await api_client.get("/questions?page=1&size=5")
 
         assert response.status_code == 200
@@ -91,7 +77,6 @@ class TestQuestionAPI:
         db_session: AsyncSession,
         sample_question_data: dict,
     ):
-        """PATCH /questions/{id} - 수정 성공"""
         question_in = QuestionCreate(**sample_question_data)
         question = await create_question(db_session, question_in)
         await db_session.commit()
@@ -103,7 +88,6 @@ class TestQuestionAPI:
         assert response.json()["title"] == update_data["title"]
 
     async def test_update_question_not_found(self, api_client: AsyncClient):
-        """PATCH /questions/{id} - 존재하지 않는 질문 (404)"""
         response = await api_client.patch("/questions/999999", json={"title": "수정 시도"})
 
         assert response.status_code == 404
@@ -114,7 +98,6 @@ class TestQuestionAPI:
         db_session: AsyncSession,
         sample_question_data: dict,
     ):
-        """DELETE /questions/{id} - 삭제 성공"""
         question_in = QuestionCreate(**sample_question_data)
         question = await create_question(db_session, question_in)
         await db_session.commit()
@@ -124,7 +107,6 @@ class TestQuestionAPI:
         assert response.status_code == 204
 
     async def test_delete_question_not_found(self, api_client: AsyncClient):
-        """DELETE /questions/{id} - 존재하지 않는 질문 (404)"""
         response = await api_client.delete("/questions/999999")
 
         assert response.status_code == 404
