@@ -12,7 +12,6 @@ from app.api.question import router as question_router
 from app.db.database import test_connection
 
 
-# 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

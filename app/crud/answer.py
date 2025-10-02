@@ -15,7 +15,7 @@ async def create_answer(
 
     answer = Answer(**answer_dict)
     db.add(answer)
-    await db.commit()
+    await db.flush()
     await db.refresh(answer)
     return answer
 
@@ -61,7 +61,7 @@ async def update_answer(
     for field, value in update_data.items():
         setattr(answer, field, value)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(answer)
     return answer
 
@@ -72,5 +72,5 @@ async def delete_answer(db: AsyncSession, answer_id: int) -> bool:
         return False
 
     await db.delete(answer)
-    await db.commit()
+    await db.flush()
     return True

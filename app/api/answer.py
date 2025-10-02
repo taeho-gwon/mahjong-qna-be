@@ -41,6 +41,7 @@ async def create_answer_handler(
         )
 
     answer = await create_answer(db, question_id, answer_in)
+    await db.commit()  # ✅ API 레이어에서 commit
     return AnswerResponse.model_validate(answer)
 
 
@@ -127,6 +128,7 @@ async def update_answer_handler(
         )
 
     answer = await update_answer(db, answer_id, answer_in)
+    await db.commit()  # ✅ API 레이어에서 commit
     return AnswerResponse.model_validate(answer)
 
 
@@ -157,3 +159,4 @@ async def delete_answer_handler(
         )
 
     await delete_answer(db, answer_id)
+    await db.commit()  # ✅ API 레이어에서 commit

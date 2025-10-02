@@ -9,7 +9,7 @@ async def create_question(db: AsyncSession, question_in: QuestionCreate) -> Ques
     question_dict = question_in.model_dump()
     question = Question(**question_dict)
     db.add(question)
-    await db.commit()
+    await db.flush()
     await db.refresh(question)
     return question
 
@@ -48,7 +48,7 @@ async def update_question(
     for field, value in update_data.items():
         setattr(question, field, value)
 
-    await db.commit()
+    await db.flush()
     await db.refresh(question)
     return question
 
@@ -59,5 +59,5 @@ async def delete_question(db: AsyncSession, question_id: int) -> bool:
         return False
 
     await db.delete(question)
-    await db.commit()
+    await db.flush()
     return True
