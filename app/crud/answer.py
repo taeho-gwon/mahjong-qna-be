@@ -9,9 +9,11 @@ async def create_answer(
     db: AsyncSession,
     question_id: int,
     answer_in: AnswerCreate,
+    author_id: int,
 ) -> Answer:
     answer_dict = answer_in.model_dump()
     answer_dict["question_id"] = question_id
+    answer_dict["author_id"] = author_id
 
     answer = Answer(**answer_dict)
     db.add(answer)

@@ -15,13 +15,6 @@ class QuestionCreate(BaseModel):
         description="질문 내용",
         examples=["마작은 어떻게 잘 치나요?"],
     )
-    author_nickname: str = Field(
-        ...,
-        min_length=2,
-        max_length=50,
-        description="작성자 닉네임",
-        examples=["햄버거"],
-    )
 
 
 class QuestionResponse(BaseModel):

@@ -5,8 +5,11 @@ from app.models.question import Question
 from app.schemas.question import QuestionCreate, QuestionUpdate
 
 
-async def create_question(db: AsyncSession, question_in: QuestionCreate) -> Question:
+async def create_question(
+    db: AsyncSession, question_in: QuestionCreate, author_id: int
+) -> Question:
     question_dict = question_in.model_dump()
+    question_dict["author_id"] = author_id
     question = Question(**question_dict)
     db.add(question)
     await db.flush()
