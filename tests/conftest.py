@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import get_settings
 from app.models.base import Base
+from tests.factories import create_test_user
 
 
 settings = get_settings()
@@ -107,3 +108,10 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
 
         await async_session.close()
         await transaction.rollback()
+
+
+@pytest.fixture
+async def test_user(db_session: AsyncSession):
+    user = await create_test_user(db_session)
+    await db_session.commit()
+    return user

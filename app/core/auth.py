@@ -1,26 +1,44 @@
 from datetime import UTC, datetime, timedelta
 
 import jwt
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
 from app.core.config import get_settings
 
 
 settings = get_settings()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ph = PasswordHasher(
+    time_cost=3,
+    memory_cost=65536,
+    parallelism=4,
+    hash_len=32,
+    salt_len=16,
+)
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return ph.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        ph.verify(hashed_password, plain_password)
+
+        if ph.check_needs_rehash(hashed_password):
+            pass
+
+        return True
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
+        return False
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
+
+    if "sub" in to_encode and isinstance(to_encode["sub"], int):
+        to_encode["sub"] = str(to_encode["sub"])
 
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
@@ -34,7 +52,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
 def decode_access_token(token: str) -> dict | None:
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        if "sub" in payload:
+            payload["sub"] = int(payload["sub"])
+
+        return payload
+
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:

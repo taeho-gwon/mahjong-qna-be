@@ -135,7 +135,7 @@ class TestAuthAPI:
 
         assert response.status_code == 401
 
-    async def test_login_and_use_token(self, api_client: AsyncClient, _db_session: AsyncSession):
+    async def test_login_and_use_token(self, api_client: AsyncClient):
         signup_data = {"username": "fullflowuser", "password": "mypassword123"}
         signup_response = await api_client.post("/auth/signup", json=signup_data)
         assert signup_response.status_code == 201
