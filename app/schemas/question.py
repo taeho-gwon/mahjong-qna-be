@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.user import AuthorInfo
+
 
 class QuestionCreate(BaseModel):
     title: str = Field(
@@ -21,7 +23,7 @@ class QuestionResponse(BaseModel):
     id: int = Field(..., description="질문 ID")
     title: str = Field(..., description="질문 제목")
     content: str = Field(..., description="질문 내용")
-    author_nickname: str = Field(..., description="작성자 닉네임")
+    author: AuthorInfo = Field(..., description="작성자 정보")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -29,7 +31,7 @@ class QuestionResponse(BaseModel):
 class QuestionListItem(BaseModel):
     id: int = Field(..., description="질문 ID")
     title: str = Field(..., description="질문 제목")
-    author_nickname: str = Field(..., description="작성자 닉네임")
+    author: AuthorInfo = Field(..., description="작성자 정보")
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -24,6 +24,13 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AuthorInfo(BaseModel):
+    id: int = Field(..., description="사용자 ID")
+    username: str = Field(..., description="사용자 아이디")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Token(BaseModel):
     access_token: str = Field(..., description="JWT 액세스 토큰")
     token_type: str = Field(default="bearer", description="토큰 타입")

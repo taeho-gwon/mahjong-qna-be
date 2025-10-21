@@ -18,6 +18,7 @@ class Question(Base):
         index=True,
         comment="작성자 ID",
     )
+    author = relationship("User", back_populates="questions")
 
     def __repr__(self):
         return (

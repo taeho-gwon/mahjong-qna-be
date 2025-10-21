@@ -17,8 +17,6 @@ class Answer(Base):
 
     content = Column(Text, nullable=False, comment="답변 내용")
 
-    question = relationship("Question", back_populates="answers")
-
     author_id = Column(
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -26,6 +24,9 @@ class Answer(Base):
         index=True,
         comment="작성자 ID",
     )
+
+    question = relationship("Question", back_populates="answers")
+    author = relationship("User", back_populates="answers")
 
     def __repr__(self):
         return (
