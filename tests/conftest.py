@@ -107,20 +107,3 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession]:
 
         await async_session.close()
         await transaction.rollback()
-
-
-@pytest.fixture
-def sample_question_data():
-    return {
-        "title": "테스트 질문입니다",
-        "content": "이것은 테스트용 질문 내용입니다. 최소 10자 이상이어야 합니다.",
-        "author_nickname": "테스터",
-    }
-
-
-@pytest.fixture
-def sample_answer_data():
-    return {
-        "content": "이것은 테스트용 답변 내용입니다. 최소 10자 이상이어야 합니다.",
-        "author_nickname": "답변자",
-    }

@@ -17,3 +17,11 @@ async def api_client(db_session: AsyncSession):
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def auth_headers(test_user, db_session):
+    from app.core.auth import create_access_token
+
+    token = create_access_token(data={"sub": test_user.id})
+    return {"Authorization": f"Bearer {token}"}

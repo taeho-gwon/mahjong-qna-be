@@ -2,6 +2,8 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tests.factories import create_test_answer, create_test_question, create_test_user
+
 
 @pytest.mark.asyncio
 class TestBasicSetup:
@@ -40,16 +42,22 @@ class TestBasicSetup:
         exists = result.scalar()
         assert exists is True
 
-    async def test_sample_data_fixtures(self, sample_question_data, sample_answer_data):
-        assert "title" in sample_question_data
-        assert "content" in sample_question_data
-        assert "author_nickname" in sample_question_data
-        assert len(sample_question_data["title"]) >= 5
-        assert len(sample_question_data["content"]) >= 10
+    async def test_factory_functions(self, db_session: AsyncSession):
+        user = await create_test_user(db_session)
+        assert user.id is not None
+        assert user.username == "testuser"
 
-        assert "content" in sample_answer_data
-        assert "author_nickname" in sample_answer_data
-        assert len(sample_answer_data["content"]) >= 10
+        question = await create_test_question(db_session, user.id)
+        assert question.id is not None
+        assert len(question.title) >= 5
+        assert len(question.content) >= 10
+        assert question.author_id == user.id
+
+        answer = await create_test_answer(db_session, question.id, user.id)
+        assert answer.id is not None
+        assert len(answer.content) >= 10
+        assert answer.question_id == question.id
+        assert answer.author_id == user.id
 
     async def test_transaction_isolation(self, db_session: AsyncSession):
         await db_session.execute(text("CREATE TEMP TABLE test_isolation (id INT, name TEXT)"))
