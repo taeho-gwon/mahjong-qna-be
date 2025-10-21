@@ -2,6 +2,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import create_access_token
 from app.db.database import get_session
 from app.main import app
 
@@ -17,3 +18,9 @@ async def api_client(db_session: AsyncSession):
         yield client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def auth_headers(test_user, db_session):
+    token = create_access_token(data={"sub": test_user.id})
+    return {"Authorization": f"Bearer {token}"}

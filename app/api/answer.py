@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import get_current_user
 from app.crud.answer import (
     create_answer,
     delete_answer,
@@ -10,6 +11,7 @@ from app.crud.answer import (
 )
 from app.crud.question import read_question_by_id
 from app.db.database import get_session
+from app.models import User
 from app.schemas.answer import (
     AnswerCreate,
     AnswerListItem,
@@ -32,6 +34,7 @@ async def create_answer_handler(
     question_id: int,
     answer_in: AnswerCreate,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> AnswerResponse:
     question = await read_question_by_id(db, question_id)
     if question is None:
@@ -40,8 +43,8 @@ async def create_answer_handler(
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
 
-    answer = await create_answer(db, question_id, answer_in)
-    await db.commit()  # ✅ API 레이어에서 commit
+    answer = await create_answer(db, question_id, answer_in, current_user.id)
+    await db.commit()
     return AnswerResponse.model_validate(answer)
 
 
@@ -111,6 +114,7 @@ async def update_answer_handler(
     answer_id: int,
     answer_in: AnswerUpdate,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> AnswerResponse:
     existing_answer = await read_answer_by_id(db, answer_id)
 
@@ -127,8 +131,11 @@ async def update_answer_handler(
             f"(질문 ID: {question_id}, 답변 ID: {answer_id})",
         )
 
+    if existing_answer.author_id != current_user.id:
+        raise HTTPException(403, "본인이 작성한 답변만 수정할 수 있습니다")
+
     answer = await update_answer(db, answer_id, answer_in)
-    await db.commit()  # ✅ API 레이어에서 commit
+    await db.commit()
     return AnswerResponse.model_validate(answer)
 
 
@@ -142,6 +149,7 @@ async def delete_answer_handler(
     question_id: int,
     answer_id: int,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     existing_answer = await read_answer_by_id(db, answer_id)
 
@@ -158,5 +166,8 @@ async def delete_answer_handler(
             f"(질문 ID: {question_id}, 답변 ID: {answer_id})",
         )
 
+    if existing_answer.author_id != current_user.id:
+        raise HTTPException(403, "본인이 작성한 답변만 삭제할 수 있습니다")
+
     await delete_answer(db, answer_id)
-    await db.commit()  # ✅ API 레이어에서 commit
+    await db.commit()

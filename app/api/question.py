@@ -3,6 +3,7 @@ from math import ceil
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import get_current_user
 from app.crud.question import (
     create_question,
     delete_question,
@@ -11,6 +12,7 @@ from app.crud.question import (
     update_question,
 )
 from app.db.database import get_session
+from app.models import User
 from app.schemas.question import (
     PaginationMeta,
     QuestionCreate,
@@ -34,8 +36,9 @@ router = APIRouter(prefix="/questions", tags=["questions"])
 async def create_question_handler(
     question_in: QuestionCreate,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> QuestionResponse:
-    question = await create_question(db, question_in)
+    question = await create_question(db, question_in, current_user.id)
     await db.commit()
     return question
 
@@ -100,6 +103,7 @@ async def update_question_handler(
     question_id: int,
     question_in: QuestionUpdate,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> QuestionResponse:
     question = await update_question(db, question_id, question_in)
     if question is None:
@@ -107,6 +111,9 @@ async def update_question_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
+
+    if question.author_id != current_user.id:
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다")
     await db.commit()
     return question
 
@@ -120,11 +127,21 @@ async def update_question_handler(
 async def delete_question_handler(
     question_id: int,
     db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> None:
-    result = await delete_question(db, question_id)
-    if not result:
+    question = await read_question_by_id(db, question_id)
+
+    if question is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"질문을 찾을 수 없습니다. (ID: {question_id})",
         )
+
+    if question.author_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="본인이 작성한 질문만 삭제할 수 있습니다",
+        )
+
+    await delete_question(db, question_id)
     await db.commit()

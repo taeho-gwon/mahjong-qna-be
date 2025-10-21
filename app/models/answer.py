@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, ForeignKey, Integer, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
@@ -17,14 +17,18 @@ class Answer(Base):
 
     content = Column(Text, nullable=False, comment="답변 내용")
 
-    author_nickname = Column(String(50), nullable=False, comment="작성자 닉네임")
+    author_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="작성자 ID",
+    )
 
     question = relationship("Question", back_populates="answers")
+    author = relationship("User", back_populates="answers")
 
     def __repr__(self):
         return (
-            f"<Answer("
-            f"id={self.id}, "
-            f"question_id={self.question_id}, "
-            f"author='{self.author_nickname}')>"
+            f"<Answer(id={self.id}, question_id={self.question_id}, author_id='{self.author_id}')>"
         )

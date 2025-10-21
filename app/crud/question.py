@@ -1,12 +1,16 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.question import Question
 from app.schemas.question import QuestionCreate, QuestionUpdate
 
 
-async def create_question(db: AsyncSession, question_in: QuestionCreate) -> Question:
+async def create_question(
+    db: AsyncSession, question_in: QuestionCreate, author_id: int
+) -> Question:
     question_dict = question_in.model_dump()
+    question_dict["author_id"] = author_id
     question = Question(**question_dict)
     db.add(question)
     await db.flush()
@@ -15,7 +19,9 @@ async def create_question(db: AsyncSession, question_in: QuestionCreate) -> Ques
 
 
 async def read_question_by_id(db: AsyncSession, question_id: int) -> Question | None:
-    result = await db.execute(select(Question).where(Question.id == question_id))
+    result = await db.execute(
+        select(Question).options(selectinload(Question.author)).where(Question.id == question_id)
+    )
     return result.scalar_one_or_none()
 
 
@@ -27,7 +33,13 @@ async def read_questions(
     count_query = select(func.count()).select_from(Question)
     total = await db.scalar(count_query)
 
-    query = select(Question).order_by(Question.created_at.desc()).offset(skip).limit(limit)
+    query = (
+        select(Question)
+        .options(selectinload(Question.author))
+        .order_by(Question.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
     result = await db.execute(query)
     questions = result.scalars().all()
 

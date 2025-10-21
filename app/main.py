@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.answer import router as answer_router
+from app.api.auth import router as auth_router
 from app.api.question import router as question_router
 from app.db.database import test_connection
 
@@ -23,6 +24,7 @@ async def lifespan(_app: FastAPI):
     # 모든 모델을 import해서 메타데이터에 등록되도록 함
     from app.models.answer import Answer  # noqa: F401
     from app.models.question import Question  # noqa: F401
+    from app.models.user import User  # noqa: F401
 
     if await test_connection():
         logger.info("데이터베이스 연결 성공!")
@@ -52,7 +54,7 @@ app.add_middleware(
 )
 
 app.include_router(question_router)
-
+app.include_router(auth_router)
 app.include_router(answer_router)
 
 static_dir = PathLib(__file__).parent.parent / "static"

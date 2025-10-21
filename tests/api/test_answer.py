@@ -2,49 +2,68 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.answer import create_answer
-from app.crud.question import create_question
-from app.schemas.answer import AnswerCreate
-from app.schemas.question import QuestionCreate
+from app.core.auth import create_access_token
+from tests.factories import create_test_answer, create_test_question, create_test_user
 
 
 @pytest.mark.asyncio
 class TestAnswerAPI:
-    @pytest.fixture
-    async def question_id(
-        self,
-        db_session: AsyncSession,
-        sample_question_data: dict,
-    ) -> int:
-        question_in = QuestionCreate(**sample_question_data)
-        question = await create_question(db_session, question_in)
-        await db_session.commit()
-        return question.id
-
     async def test_create_answer(
         self,
         api_client: AsyncClient,
-        question_id: int,
-        sample_answer_data: dict,
+        db_session: AsyncSession,
+        test_user,
+        auth_headers: dict,
     ):
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
+        answer_data = {
+            "content": "이것은 테스트 답변입니다. 최소 10자 이상이어야 합니다.",
+        }
         response = await api_client.post(
-            f"/questions/{question_id}/answers",
-            json=sample_answer_data,
+            f"/questions/{question.id}/answers",
+            json=answer_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 201
         data = response.json()
         assert data["id"] is not None
-        assert data["question_id"] == question_id
+        assert data["question_id"] == question.id
+        assert data["content"] == answer_data["content"]
+
+    async def test_create_answer_without_auth(
+        self,
+        api_client: AsyncClient,
+        db_session: AsyncSession,
+        test_user,
+    ):
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
+        answer_data = {
+            "content": "인증 없이 답변을 작성합니다. 최소 10자 이상.",
+        }
+        response = await api_client.post(
+            f"/questions/{question.id}/answers",
+            json=answer_data,
+        )
+
+        assert response.status_code == 403
 
     async def test_create_answer_question_not_found(
         self,
         api_client: AsyncClient,
-        sample_answer_data: dict,
+        auth_headers: dict,
     ):
+        answer_data = {
+            "content": "존재하지 않는 질문에 답변합니다. 최소 10자 이상.",
+        }
         response = await api_client.post(
             "/questions/999999/answers",
-            json=sample_answer_data,
+            json=answer_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 404
@@ -52,15 +71,20 @@ class TestAnswerAPI:
     async def test_create_answer_validation_error(
         self,
         api_client: AsyncClient,
-        question_id: int,
+        db_session: AsyncSession,
+        test_user,
+        auth_headers: dict,
     ):
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
         invalid_data = {
             "content": "짧음",
-            "author_nickname": "답변자",
         }
         response = await api_client.post(
-            f"/questions/{question_id}/answers",
+            f"/questions/{question.id}/answers",
             json=invalid_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 422
@@ -69,17 +93,20 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        question_id: int,
-        sample_answer_data: dict,
+        test_user,
     ):
+        question = await create_test_question(db_session, test_user.id)
+
         for i in range(3):
-            data = sample_answer_data.copy()
-            data["content"] = f"답변 {i + 1}번입니다. 최소 10자 이상."
-            answer_in = AnswerCreate(**data)
-            await create_answer(db_session, question_id, answer_in)
+            await create_test_answer(
+                db_session,
+                question.id,
+                test_user.id,
+                content=f"답변 {i + 1}번입니다. 최소 10자 이상.",
+            )
         await db_session.commit()
 
-        response = await api_client.get(f"/questions/{question_id}/answers")
+        response = await api_client.get(f"/questions/{question.id}/answers")
 
         assert response.status_code == 200
         assert len(response.json()) == 3
@@ -93,14 +120,13 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        question_id: int,
-        sample_answer_data: dict,
+        test_user,
     ):
-        answer_in = AnswerCreate(**sample_answer_data)
-        answer = await create_answer(db_session, question_id, answer_in)
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
         await db_session.commit()
 
-        response = await api_client.get(f"/questions/{question_id}/answers/{answer.id}")
+        response = await api_client.get(f"/questions/{question.id}/answers/{answer.id}")
 
         assert response.status_code == 200
         assert response.json()["id"] == answer.id
@@ -108,9 +134,13 @@ class TestAnswerAPI:
     async def test_get_answer_not_found(
         self,
         api_client: AsyncClient,
-        question_id: int,
+        db_session: AsyncSession,
+        test_user,
     ):
-        response = await api_client.get(f"/questions/{question_id}/answers/999999")
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
+        response = await api_client.get(f"/questions/{question.id}/answers/999999")
 
         assert response.status_code == 404
 
@@ -118,18 +148,12 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        sample_question_data: dict,
-        sample_answer_data: dict,
+        test_user,
     ):
-        question1_in = QuestionCreate(**sample_question_data)
-        question1 = await create_question(db_session, question1_in)
-        answer_in = AnswerCreate(**sample_answer_data)
-        answer = await create_answer(db_session, question1.id, answer_in)
+        question1 = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question1.id, test_user.id)
 
-        data2 = sample_question_data.copy()
-        data2["title"] = "두 번째 질문입니다"
-        question2_in = QuestionCreate(**data2)
-        question2 = await create_question(db_session, question2_in)
+        question2 = await create_test_question(db_session, test_user.id, title="두 번째 질문입니다")
         await db_session.commit()
 
         response = await api_client.get(f"/questions/{question2.id}/answers/{answer.id}")
@@ -140,31 +164,81 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        question_id: int,
-        sample_answer_data: dict,
+        test_user,
+        auth_headers: dict,
     ):
-        answer_in = AnswerCreate(**sample_answer_data)
-        answer = await create_answer(db_session, question_id, answer_in)
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
         await db_session.commit()
 
         update_data = {"content": "수정된 답변 내용입니다. 최소 10자 이상."}
         response = await api_client.patch(
-            f"/questions/{question_id}/answers/{answer.id}",
+            f"/questions/{question.id}/answers/{answer.id}",
             json=update_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
         assert response.json()["content"] == update_data["content"]
 
+    async def test_update_answer_without_auth(
+        self,
+        api_client: AsyncClient,
+        db_session: AsyncSession,
+        test_user,
+    ):
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
+        await db_session.commit()
+
+        update_data = {"content": "수정 시도합니다. 최소 10자 이상."}
+        response = await api_client.patch(
+            f"/questions/{question.id}/answers/{answer.id}",
+            json=update_data,
+        )
+
+        assert response.status_code == 403
+
+    async def test_update_answer_not_owner(
+        self,
+        api_client: AsyncClient,
+        db_session: AsyncSession,
+        test_user,
+    ):
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
+        await db_session.commit()
+
+        user2 = await create_test_user(db_session, username="user2")
+        await db_session.commit()
+
+        token = create_access_token(data={"sub": user2.id})
+        headers = {"Authorization": f"Bearer {token}"}
+
+        update_data = {"content": "수정 시도합니다. 최소 10자 이상."}
+        response = await api_client.patch(
+            f"/questions/{question.id}/answers/{answer.id}",
+            json=update_data,
+            headers=headers,
+        )
+
+        assert response.status_code == 403
+
     async def test_update_answer_not_found(
         self,
         api_client: AsyncClient,
-        question_id: int,
+        db_session: AsyncSession,
+        test_user,
+        auth_headers: dict,
     ):
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
         update_data = {"content": "수정 시도합니다. 최소 10자 이상."}
         response = await api_client.patch(
-            f"/questions/{question_id}/answers/999999",
+            f"/questions/{question.id}/answers/999999",
             json=update_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 404
@@ -173,24 +247,20 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        sample_question_data: dict,
-        sample_answer_data: dict,
+        test_user,
+        auth_headers: dict,
     ):
-        question1_in = QuestionCreate(**sample_question_data)
-        question1 = await create_question(db_session, question1_in)
-        answer_in = AnswerCreate(**sample_answer_data)
-        answer = await create_answer(db_session, question1.id, answer_in)
+        question1 = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question1.id, test_user.id)
 
-        data2 = sample_question_data.copy()
-        data2["title"] = "두 번째 질문입니다"
-        question2_in = QuestionCreate(**data2)
-        question2 = await create_question(db_session, question2_in)
+        question2 = await create_test_question(db_session, test_user.id, title="두 번째 질문입니다")
         await db_session.commit()
 
         update_data = {"content": "수정 시도합니다. 최소 10자 이상."}
         response = await api_client.patch(
             f"/questions/{question2.id}/answers/{answer.id}",
             json=update_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 400
@@ -199,23 +269,48 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        question_id: int,
-        sample_answer_data: dict,
+        test_user,
+        auth_headers: dict,
     ):
-        answer_in = AnswerCreate(**sample_answer_data)
-        answer = await create_answer(db_session, question_id, answer_in)
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
         await db_session.commit()
 
-        response = await api_client.delete(f"/questions/{question_id}/answers/{answer.id}")
+        response = await api_client.delete(
+            f"/questions/{question.id}/answers/{answer.id}",
+            headers=auth_headers,
+        )
 
         assert response.status_code == 204
+
+    async def test_delete_answer_without_auth(
+        self,
+        api_client: AsyncClient,
+        db_session: AsyncSession,
+        test_user,
+    ):
+        question = await create_test_question(db_session, test_user.id)
+        answer = await create_test_answer(db_session, question.id, test_user.id)
+        await db_session.commit()
+
+        response = await api_client.delete(f"/questions/{question.id}/answers/{answer.id}")
+
+        assert response.status_code == 403
 
     async def test_delete_answer_not_found(
         self,
         api_client: AsyncClient,
-        question_id: int,
+        db_session: AsyncSession,
+        test_user,
+        auth_headers: dict,
     ):
-        response = await api_client.delete(f"/questions/{question_id}/answers/999999")
+        question = await create_test_question(db_session, test_user.id)
+        await db_session.commit()
+
+        response = await api_client.delete(
+            f"/questions/{question.id}/answers/999999",
+            headers=auth_headers,
+        )
 
         assert response.status_code == 404
 
@@ -223,20 +318,24 @@ class TestAnswerAPI:
         self,
         api_client: AsyncClient,
         db_session: AsyncSession,
-        sample_question_data: dict,
-        sample_answer_data: dict,
+        test_user,
+        auth_headers: dict,
     ):
-        question_in = QuestionCreate(**sample_question_data)
-        question = await create_question(db_session, question_in)
+        question = await create_test_question(db_session, test_user.id)
 
         for i in range(3):
-            data = sample_answer_data.copy()
-            data["content"] = f"답변 {i + 1}번입니다. 최소 10자 이상."
-            answer_in = AnswerCreate(**data)
-            await create_answer(db_session, question.id, answer_in)
+            await create_test_answer(
+                db_session,
+                question.id,
+                test_user.id,
+                content=f"답변 {i + 1}번입니다. 최소 10자 이상.",
+            )
         await db_session.commit()
 
-        delete_response = await api_client.delete(f"/questions/{question.id}")
+        delete_response = await api_client.delete(
+            f"/questions/{question.id}",
+            headers=auth_headers,
+        )
         assert delete_response.status_code == 204
 
         list_response = await api_client.get(f"/questions/{question.id}/answers")
