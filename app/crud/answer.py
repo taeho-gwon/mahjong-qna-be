@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.answer import Answer
 from app.schemas.answer import AnswerCreate, AnswerUpdate
@@ -23,7 +24,9 @@ async def create_answer(
 
 
 async def read_answer_by_id(db: AsyncSession, answer_id: int) -> Answer | None:
-    result = await db.execute(select(Answer).where(Answer.id == answer_id))
+    result = await db.execute(
+        select(Answer).options(selectinload(Answer.author)).where(Answer.id == answer_id)
+    )
     return result.scalar_one_or_none()
 
 
@@ -38,6 +41,7 @@ async def read_answers_by_question_id(
 
     query = (
         select(Answer)
+        .options(selectinload(Answer.author))
         .where(Answer.question_id == question_id)
         .order_by(Answer.created_at.desc())
         .offset(skip)
